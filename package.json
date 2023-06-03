@@ -1,0 +1,25 @@
+{
+  "name": "kahoot-spammer",
+  "version": "1.0.0",
+  "description": "all sorts of spammers for shit at school",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/realmichealbay/Kahoot-Spammer.git"
+  },
+  "keywords": [
+    "spammer"
+  ],
+  "author": "Victor Johnson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/realmichealbay/Kahoot-Spammer/issues"
+  },
+  "homepage": "https://github.com/realmichealbay/Kahoot-Spammer#readme",
+  "dependencies": {
+    "puppeteer": "^20.5.0"
+  }
+}
