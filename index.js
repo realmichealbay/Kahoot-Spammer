@@ -2,8 +2,8 @@ const puppeteer = require("puppeteer");
 
 const code = "1545894";
 const playerArray = [];
-const AmountOfBots = 5;
-const Name = "jogsons";
+const AmountOfBots = 10;
+const Name = "sebass";
 
 
 if (Name.length >= 12) {
@@ -64,7 +64,7 @@ async function start(PIN, NAME) {
   console.log("Complete");
 
   await page.waitForNavigation();
-  await browser.close();
+  //await browser.close();
 }
 
 for (var index = 0; index != AmountOfBots; index++) {
