@@ -1,65 +1,75 @@
 const puppeteer = require("puppeteer");
 
-const code = "3363532";
+const code = "1545894";
 const playerArray = [];
-const AmountOfBots = 1;
-const Name = "blah";
+const AmountOfBots = 5;
+const Name = "jogsons";
+
+
+if (Name.length >= 12) {
+  console.error("Name has to be lower than 12");
+  throw error;
+} else {
+  console.log("Valid Names")
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 for (var index = 0; index != AmountOfBots; index++) {
   playerArray.push(Name + index);
 }
 
-console.log(playerArray);
-
 async function start(PIN, NAME) {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
+  const nickname = NAME;
+
   await page.goto("https://kahoot.it/");
   //type code
   try {
     await page.waitForSelector("#game-input");
-    console.log("Found Game input");
     await page.type("#game-input", PIN);
-    console.log("Code Typed");
   } catch (error) {
     console.log(error);
     console.log("failed");
   }
   // clicking
   try {
+    await page.waitForSelector("button");
     await page.click("button");
-    console.log("Clicked");
   } catch (error) {
     console.log("failed");
     console.log(error);
   }
+  // 2nd page
 
   try {
-    await page.waitForSelector("form");
-    await page.type("input", NAME);
+    console.log(nickname);
+    await page.waitForNavigation();
+    await page.click("#nickname");
+    await page.type("#nickname", nickname);
     console.log("Nickname Typed " + NAME);
   } catch (error) {
     console.log(error);
   }
+  // clicking
   try {
     await page.click("button");
-    console.log("Clicked");
   } catch (error) {
     console.log("failed");
     console.log(error);
   }
+  console.log("Complete");
 
-  /*
-  await page.goto("");
-  await page.waitForSelector("");
-*/
-
-  //await browser.close();
+  await page.waitForNavigation();
+  await browser.close();
 }
 
 for (var index = 0; index != AmountOfBots; index++) {
   let tempPlayerName = "";
   tempPlayerName = playerArray[index];
-  console.log(tempPlayerName);
   start(code, tempPlayerName);
+  wait(2000);
 }
