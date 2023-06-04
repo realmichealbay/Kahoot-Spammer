@@ -1,10 +1,11 @@
 const puppeteer = require("puppeteer");
 
-const code = "1624028";
+const code = "4672173";
 const playerArray = [];
 const AmountOfBots = 1;
-const Name = "amongthiuss";
+const Name = "bittleyou";
 const Guessing = true;
+const TwoFA = true;
 
 if (Name.length >= 13) {
   throw new error("Name has to be lower than 12");
@@ -19,7 +20,11 @@ for (var index = 0; index != AmountOfBots; index++) {
 }
 
 async function start(PIN, NAME, GUESS) {
-  const browser = await puppeteer.launch({ headless: false });
+  const browser = await puppeteer.launch({
+    headless: false,
+    defaultViewport: null,
+    args: ["--window-size=500,500"],
+  });
   const page = await browser.newPage();
   const nickname = NAME;
 
@@ -46,6 +51,26 @@ async function start(PIN, NAME, GUESS) {
     await page.waitForNavigation();
     await page.click("#nickname");
     await page.type("#nickname", nickname);
+    try {
+      await page.waitForSelector(
+        'div[data-functional-selector="notification-bar-error"]',
+        { timeout: 3000 }
+      );
+
+      const errorMessage = await page.$eval(
+        'div[data-functional-selector="notification-bar-text"]',
+        (el) => el.textContent
+      );
+
+      if (errorMessage === "Sorry, that nickname is taken.") {
+        console.log("Nickname is already taken.");
+      } else {
+        console.log("An error occurred: " + errorMessage);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+
     console.debug("Nickname Typed " + NAME);
   } catch (error) {
     console.log(error);
@@ -63,32 +88,19 @@ async function start(PIN, NAME, GUESS) {
   if (GUESS == true) {
     await page.waitForNavigation();
     //gets the number of questions
-    var questionCounterText = await page.$eval(
-      'div[data-functional-selector="question-index-counter"]',
-      (el) => el.textContent
-    );
-    var parts = questionCounterText.split(" of ");
-    var currentQuestion = parseInt(parts[0].trim(), 10);
-    var totalQuestions = parseInt(parts[1].trim(), 10);
+    var currentQuestion = 0;
+    var totalQuestions = 1;
 
     while (currentQuestion != totalQuestions) {
-      var questionCounterText = await page.$eval(
-        'div[data-functional-selector="question-index-counter"]',
-        (el) => el.textContent
-      );
-      var parts = questionCounterText.split(" of ");
-      var currentQuestion = parseInt(parts[0].trim(), 10);
-      var totalQuestions = parseInt(parts[1].trim(), 10);
-
       await page.waitForSelector("button", { timeout: 0 });
+
+      var [currentQuestion, totalQuestions] = await get_question_number(page);
+
       //gets amount of answers there are
       var answerButtons = await page.$$(
         '[data-functional-selector^="answer-"]'
       );
-
-      let totalAnswers = answerButtons.length;
-
-      let answer = Math.floor(Math.random() * totalAnswers);
+      let answer = Math.floor(Math.random() * answerButtons.length);
       console.log(nickname + "s guess is " + answer);
 
       if (answer == 0) {
@@ -100,16 +112,31 @@ async function start(PIN, NAME, GUESS) {
       } else if (answer == 3) {
         await page.click('button[data-functional-selector="answer-3"]');
       }
-      console.log(currentQuestion, totalQuestions);
     }
   }
 
+  await page.waitForNavigation();
+  await page.waitForNavigation();
   let current_ulr = page.url();
+  console.log(current_ulr);
   if (current_ulr == "https://kahoot.it/ranking") {
     await browser.close();
   }
 }
+async function get_question_number(page) {
+  //gets the number of questions
+  var questionCounterText = await page.$eval(
+    'div[data-functional-selector="question-index-counter"]',
+    (el) => el.textContent
+  );
 
+  var parts = questionCounterText.split(" of ");
+  var currentQuestion = parseInt(parts[0].trim(), 10);
+  var totalQuestions = parseInt(parts[1].trim(), 10);
+
+  // Return an array with two elements
+  return [currentQuestion, totalQuestions];
+}
 for (var index = 0; index != AmountOfBots; index++) {
   let tempPlayerName = "";
   tempPlayerName = playerArray[index];
