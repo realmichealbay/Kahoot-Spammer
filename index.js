@@ -1,16 +1,13 @@
 const puppeteer = require("puppeteer");
 
-const code = "1545894";
+const code = "1624028";
 const playerArray = [];
-const AmountOfBots = 10;
-const Name = "sebass";
+const AmountOfBots = 3;
+const Name = "biden";
+const Guessing = true;
 
-
-if (Name.length >= 12) {
-  console.error("Name has to be lower than 12");
-  throw error;
-} else {
-  console.log("Valid Names")
+if (Name.length >= 13) {
+  throw new error("Name has to be lower than 12");
 }
 
 function wait(ms) {
@@ -21,8 +18,8 @@ for (var index = 0; index != AmountOfBots; index++) {
   playerArray.push(Name + index);
 }
 
-async function start(PIN, NAME) {
-  const browser = await puppeteer.launch({ headless: true });
+async function start(PIN, NAME, GUESS) {
+  const browser = await puppeteer.launch({ headless: false });
   const page = await browser.newPage();
   const nickname = NAME;
 
@@ -33,24 +30,23 @@ async function start(PIN, NAME) {
     await page.type("#game-input", PIN);
   } catch (error) {
     console.log(error);
-    console.log("failed");
+    console.error("failed");
   }
   // clicking
   try {
     await page.waitForSelector("button");
     await page.click("button");
   } catch (error) {
-    console.log("failed");
+    console.error("failed");
     console.log(error);
   }
   // 2nd page
 
   try {
-    console.log(nickname);
     await page.waitForNavigation();
     await page.click("#nickname");
     await page.type("#nickname", nickname);
-    console.log("Nickname Typed " + NAME);
+    console.debug("Nickname Typed " + NAME);
   } catch (error) {
     console.log(error);
   }
@@ -58,18 +54,55 @@ async function start(PIN, NAME) {
   try {
     await page.click("button");
   } catch (error) {
-    console.log("failed");
+    console.error("failed");
     console.log(error);
   }
-  console.log("Complete");
 
   await page.waitForNavigation();
-  //await browser.close();
+
+  if (GUESS == true) {
+    await page.waitForNavigation();
+    /*
+    var questionCounterText = await page.$eval(
+      'div[data-functional-selector="question-index-counter"]',
+      (el) => el.textContent
+    );
+    var parts = questionCounterText.split(" of ");
+    var currentQuestion = parseInt(parts[0].trim(), 10);
+    var totalQuestions = parseInt(parts[1].trim(), 10);
+    var answerButtons = await page.$$('[data-functional-selector^="answer-"]');
+    */
+   
+    while (currentQuestion != totalQuestions) {
+      await page.waitForSelector("button", { timeout: 0 });
+
+      let totalAnswers = answerButtons.length;
+
+      let answer = Math.floor(Math.random() * totalAnswers);
+      console.log(nickname + "s guess is " + answer);
+
+      if (answer == 0) {
+        await page.click('button[data-functional-selector="answer-0"]');
+      } else if (answer == 1) {
+        await page.click('button[data-functional-selector="answer-1"]');
+      } else if (answer == 2) {
+        await page.click('button[data-functional-selector="answer-2"]');
+      } else if (answer == 3) {
+        await page.click('button[data-functional-selector="answer-3"]');
+      }
+      console.log(currentQuestion);
+    }
+  }
+
+  let current_ulr = page.url();
+  if (current_ulr == "https://kahoot.it/ranking") {
+    await browser.close();
+  }
 }
 
 for (var index = 0; index != AmountOfBots; index++) {
   let tempPlayerName = "";
   tempPlayerName = playerArray[index];
-  start(code, tempPlayerName);
+  start(code, tempPlayerName, Guessing);
   wait(2000);
 }
