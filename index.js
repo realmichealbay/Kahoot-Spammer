@@ -2,8 +2,8 @@ const puppeteer = require("puppeteer");
 
 const code = "4672173";
 const playerArray = [];
-const AmountOfBots = 1;
-const Name = "bittleyou";
+const AmountOfBots = 5;
+const Name = "joeshst";
 const Guessing = true;
 const TwoFA = true;
 
@@ -19,23 +19,35 @@ for (var index = 0; index != AmountOfBots; index++) {
   playerArray.push(Name + index);
 }
 
+function createCheckURL(page, browser) {
+  return async function checkURL() {
+    let current_url = page.url();
+    console.debug(page.url());
+    if (current_url === "https://kahoot.it/ranking") {
+      await browser.close();
+    }
+  };
+}
+
 async function start(PIN, NAME, GUESS) {
   const browser = await puppeteer.launch({
-    headless: false,
+    headless: true,
     defaultViewport: null,
     args: ["--window-size=500,500"],
   });
   const page = await browser.newPage();
-  const nickname = NAME;
-
+  setInterval(createCheckURL(page, browser), 1000);
   await page.goto("https://kahoot.it/");
   //type code
   try {
     await page.waitForSelector("#game-input");
-    await page.type("#game-input", PIN);
+    const gameInput = await page.$("#game-input");
+    if(gameInput){
+      await gameInput.type(PIN);
+    }
   } catch (error) {
-    console.log(error);
     console.error("failed");
+    console.log(error);
   }
   // clicking
   try {
@@ -50,11 +62,17 @@ async function start(PIN, NAME, GUESS) {
   try {
     await page.waitForNavigation();
     await page.click("#nickname");
-    await page.type("#nickname", nickname);
+    await page.type("#nickname", NAME);
     try {
+      try {
+        await page.click("button");
+      } catch (error) {
+        console.error("failed");
+        console.log(error);
+      }
       await page.waitForSelector(
         'div[data-functional-selector="notification-bar-error"]',
-        { timeout: 3000 }
+        { timeout: 5000 }
       );
 
       const errorMessage = await page.$eval(
@@ -63,15 +81,22 @@ async function start(PIN, NAME, GUESS) {
       );
 
       if (errorMessage === "Sorry, that nickname is taken.") {
-        console.log("Nickname is already taken.");
+        await page.$eval("#nickname", (el) => (el.value = ""));
+        let alt_Nickname = NAME + "-";
+        await page.type("#nickname", alt_Nickname);
+        console.debug("Nickname Typed " + alt_Nickname);
+        try {
+          await page.click("button");
+        } catch (error) {
+          console.error("failed");
+          console.log(error);
+        }
       } else {
         console.log("An error occurred: " + errorMessage);
       }
     } catch (error) {
       console.log(error);
     }
-
-    console.debug("Nickname Typed " + NAME);
   } catch (error) {
     console.log(error);
   }
@@ -82,9 +107,34 @@ async function start(PIN, NAME, GUESS) {
     console.error("failed");
     console.log(error);
   }
+  console.debug("Nickname Typed " + NAME);
+  await page.waitForNavigation({ timeout: 0 });
 
-  await page.waitForNavigation();
+  if (GUESS == true) {
+    await page.waitForNavigation();
+    var currentQuestion = 0;
+    var totalQuestions = 1;
+    while (currentQuestion != totalQuestions) {
+      const button = await page.$("button");
+      if (button) {
+        var [currentQuestion, totalQuestions] = await get_question_number(page);
+        var answerButtons = await page.$$(
+          '[data-functional-selector^="answer-"]'
+        );
+        let answer = Math.floor(Math.random() * answerButtons.length);
+        console.log(NAME + "s guess is " + answer);
 
+        const answerButton = await page.$(
+          `button[data-functional-selector="answer-${answer}"]`
+        );
+        if (answerButton) {
+          await answerButton.click();
+        }
+      }
+    }
+  }
+
+  /*
   if (GUESS == true) {
     await page.waitForNavigation();
     //gets the number of questions
@@ -101,7 +151,7 @@ async function start(PIN, NAME, GUESS) {
         '[data-functional-selector^="answer-"]'
       );
       let answer = Math.floor(Math.random() * answerButtons.length);
-      console.log(nickname + "s guess is " + answer);
+      console.log(NAME + "s guess is " + answer);
 
       if (answer == 0) {
         await page.click('button[data-functional-selector="answer-0"]');
@@ -113,15 +163,15 @@ async function start(PIN, NAME, GUESS) {
         await page.click('button[data-functional-selector="answer-3"]');
       }
     }
-  }
-
+  }*/
+  /*
   await page.waitForNavigation();
   await page.waitForNavigation();
   let current_ulr = page.url();
-  console.log(current_ulr);
   if (current_ulr == "https://kahoot.it/ranking") {
     await browser.close();
   }
+  */
 }
 async function get_question_number(page) {
   //gets the number of questions
