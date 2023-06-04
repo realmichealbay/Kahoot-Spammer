@@ -2,8 +2,8 @@ const puppeteer = require("puppeteer");
 
 const code = "1624028";
 const playerArray = [];
-const AmountOfBots = 3;
-const Name = "biden";
+const AmountOfBots = 1;
+const Name = "amongthiuss";
 const Guessing = true;
 
 if (Name.length >= 13) {
@@ -62,7 +62,7 @@ async function start(PIN, NAME, GUESS) {
 
   if (GUESS == true) {
     await page.waitForNavigation();
-    /*
+    //gets the number of questions
     var questionCounterText = await page.$eval(
       'div[data-functional-selector="question-index-counter"]',
       (el) => el.textContent
@@ -70,11 +70,21 @@ async function start(PIN, NAME, GUESS) {
     var parts = questionCounterText.split(" of ");
     var currentQuestion = parseInt(parts[0].trim(), 10);
     var totalQuestions = parseInt(parts[1].trim(), 10);
-    var answerButtons = await page.$$('[data-functional-selector^="answer-"]');
-    */
-   
+
     while (currentQuestion != totalQuestions) {
+      var questionCounterText = await page.$eval(
+        'div[data-functional-selector="question-index-counter"]',
+        (el) => el.textContent
+      );
+      var parts = questionCounterText.split(" of ");
+      var currentQuestion = parseInt(parts[0].trim(), 10);
+      var totalQuestions = parseInt(parts[1].trim(), 10);
+
       await page.waitForSelector("button", { timeout: 0 });
+      //gets amount of answers there are
+      var answerButtons = await page.$$(
+        '[data-functional-selector^="answer-"]'
+      );
 
       let totalAnswers = answerButtons.length;
 
@@ -90,7 +100,7 @@ async function start(PIN, NAME, GUESS) {
       } else if (answer == 3) {
         await page.click('button[data-functional-selector="answer-3"]');
       }
-      console.log(currentQuestion);
+      console.log(currentQuestion, totalQuestions);
     }
   }
 
